@@ -1,0 +1,91 @@
+---
+title: "Graphing the data"
+author: "Asmus Hylkjaer"
+date: " created 07/12/2022, updated date: `r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+##Graphing
+dunno what this does
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message=FALSE)
+```
+
+```{r library}
+library(tidyverse)
+library(readxl)
+library(here)
+```
+
+
+```{r load-data}
+Heritage_list_graph <- read_excel("data/whc-sites-2021.xls")
+Heritage_list_graph_data <-read_delim("data/inscribtion_data.csv")
+Heritage_list_graph_data2 <- read_excel("data/inscribtion_data.xlsx")
+
+```
+
+## Inspect the data
+```{r inspect}
+head(Heritage_list_graph)
+head(Heritage_list_graph_data)
+head(Heritage_list_graph_data2)
+```
+## Let's how many percentage are added a year pr. region
+```{r plot-yearly-percentage, eval = TRUE}
+ggplot(Heritage_list_graph_data2, aes(x=year)) + 
+  geom_line(aes(y=procentage_year_Eu, color="EU & NA")) + 
+  geom_line(aes(y=procentage_year_AsP, color="Asia & pasific")) + 
+  geom_line(aes(y=procentage_year_AF, color="Africa"))+
+  geom_line(aes(y=procentage_year_AS, color="Arab states")) + 
+  geom_line(aes(y=procentage_year_LA, color="Latin america"))+
+  labs(title="World heritage sites added pr. year percentages pr. region",
+       y="Percentage",x="Year",color="Region")+
+  scale_x_continuous(breaks = seq(1978,2021,5))+
+  theme(axis.text.x = element_text(face="bold", color="#993333", 
+                                   size=8, angle=0),
+        axis.text.y = element_text(face="bold", color="#993333", 
+                                   size=8, angle=0))
+
+```
+
+
+## Let's how many percentag
+```{r plot-cul-percentage, eval = TRUE}
+ggplot(Heritage_list_graph_data2, aes(x=year)) + 
+  geom_line(aes(y=Eu_percentage_cul, color="EU & NA")) + 
+  geom_line(aes(y=AsP_percentage_cul, color="Asia & pasific")) + 
+  geom_line(aes(y=AF_percentage_cul, color="Africa"))+
+  geom_line(aes(y=AS_percentage_cul, color="Arab states")) + 
+  geom_line(aes(y=LA_percentage_cul, color="Latin america"))+
+  labs(title="World heritage sites regions split into percentages",
+       y="Percentage",x="Year",color="Region")+
+  scale_x_continuous(breaks = seq(1978,2021,5))+
+  theme(axis.text.x = element_text(face="bold", color="#993333", 
+                                   size=8, angle=0),
+        axis.text.y = element_text(face="bold", color="#993333", 
+                                   size=8, angle=0))
+
+```
+
+
+notes for the excel sheet
+wanted to do csv. didnt work
+did manual editing of the spreadshet. but was using ecxel funktions. no numbers were added manually.
+added collum and renamed them to make them easier to work with.
+so the data is imported from unesco 
+
+(https://whc.unesco.org/en/list/stat):
+"Number of World Heritage properties inscribed each year by region"
+
+added collums
+anything mentioning cul(minative) or percentage 
+
+
+
+gdp - cost money to get a site
+look into countries asking to get sites added to the list 
+ - might have other priorities
