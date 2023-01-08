@@ -1,0 +1,244 @@
+---
+title: "Graphing the data"
+author: "Asmus Hylkjaer"
+date: " created 07/12/2022, updated date: `r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+##Graphing
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message=FALSE)
+```
+
+```{r library}
+library(tidyverse)
+library(readxl)
+library(cowplot)
+library(ggplot2)
+library(here)
+```
+
+
+```{r load-data}
+Heritage_list_graph_data2 <- read_excel("data/inscribtion_data.xlsx")
+
+```
+
+## Inspect the data
+```{r inspect}
+head(Heritage_list_graph_data2)
+```
+## Let's how many percentage are added a year pr. region
+```{r plot-yearly-percentage, eval = TRUE}
+ggplot(Heritage_list_graph_data2, aes(x=year)) + 
+  geom_line(aes(y=procentage_year_Eu, color="EU & NA")) + 
+  geom_line(aes(y=procentage_year_AsP, color="Asia & pasific")) + 
+  geom_line(aes(y=procentage_year_AF, color="Africa"))+
+  geom_line(aes(y=procentage_year_AS, color="Arab states")) + 
+  geom_line(aes(y=procentage_year_LA, color="Latin america"))+
+  labs(title="World heritage sites added pr. year percentages pr. region",
+       y="Percentage",x="Year",color="Region")+
+  scale_x_continuous(breaks = seq(1978,2021,5))+
+  theme(axis.text.x = element_text(face="bold", color="#993333", 
+                                   size=8, angle=0),
+        axis.text.y = element_text(face="bold", color="#993333", 
+                                   size=8, angle=0))
+
+```
+
+
+## Let's see the world heritage sites by percentage
+```{r plot-cumulative-percentage, eval = TRUE}
+ggplot(Heritage_list_graph_data2, aes(x=year)) + 
+  geom_line(aes(y=Eu_percentage_cumulative , color="EU & NA")) + 
+  geom_line(aes(y=AsP_percentage_cumulative , color="Asia & pasific")) + 
+  geom_line(aes(y=AF_percentage_cumulative , color="Africa"))+
+  geom_line(aes(y=AS_percentage_cumulative , color="Arab states")) + 
+  geom_line(aes(y=LA_percentage_cumulative , color="Latin america"))+
+  labs(title="World heritage sites regions split into percentages",
+       y="Percentage",x="Year",color="Region")+
+  scale_x_continuous(breaks = seq(1978,2021,5))+
+  theme(axis.text.x = element_text(face="bold", color="#993333", 
+                                   size=8, angle=0),
+        axis.text.y = element_text(face="bold", color="#993333", 
+                                   size=8, angle=0))
+
+```
+Load in the GDP data
+```{r gdp}
+GDP_IMF <- read_excel("data/GDP_DATA.xlsx")
+```
+
+```{r check the original document}
+head(GDP_IMF)
+```
+## spreadsheet manipulation
+To make this as comparable to the Unesco heritage sites data as possible i want to add a column with Europe and North america as isnt in the data set.
+the other regions have a column that despite not being a perfect match will suffice for the comparison in this proof of concept
+```{r creation of new colums}
+GDP_IMF_Regions <- GDP_IMF %>% 
+mutate(EU_NA=GDP_IMF$Europe+GDP_IMF$North_America)
+```
+
+```{r check data}
+head(GDP_IMF_Regions) %>% 
+  select(year,
+         EU_NA,
+         Asia_and_Pacific,
+         Africa_Region,
+         Middle_East_Region,
+         Latin_America_and_the_Caribbean,
+         World)
+```
+
+## GDP By region
+```{r gdp-plotting}
+ggplot(GDP_IMF_Regions, aes(x=year)) + 
+  geom_line(aes(y=EU_NA, color="EU & NA")) + 
+  geom_line(aes(y=Asia_and_Pacific, color="Asia and the Pacific")) +
+  geom_line(aes(y=Africa_Region, color="Africa")) +
+  geom_line(aes(y=Middle_East_Region, color="Arab states")) +
+  geom_line(aes(y=Latin_America_and_the_Caribbean, color="Latin america")) +
+  labs(title="GDP split into regions",
+       y="GDP, current prices (Billions of U.S.dollars)",x="Year",color="Region")+
+  scale_y_continuous(breaks = seq(0,100000,10000))+
+  theme(axis.text.x = element_text(face="bold", color="#993333", 
+                                   size=8, angle=0),
+        axis.text.y = element_text(face="bold", color="#993333", 
+                                   size=8, angle=0))
+```
+##adding column to the spreadsheet
+As my graphs with the Unesco heritage sites in displayed in percentages i want to add percentages columns to the GDP data set
+```{r creation of new colums for percentages}
+GDP_IMF_Regions_percentages <- GDP_IMF_Regions %>% 
+mutate(EU_NA_procent=GDP_IMF_Regions$EU_NA/GDP_IMF_Regions$World*100) %>% 
+mutate(La_procent=GDP_IMF_Regions$Latin_America_and_the_Caribbean/GDP_IMF_Regions$World*100) %>% 
+mutate(Arab_procent=GDP_IMF_Regions$Middle_East_Region/GDP_IMF_Regions$World*100) %>% 
+mutate(Asia_Pacific_procent=GDP_IMF_Regions$Asia_and_Pacific/GDP_IMF_Regions$World*100) %>% 
+mutate(Africa_procent=GDP_IMF_Regions$Africa_Region/GDP_IMF_Regions$World*100)
+```
+
+
+```{r check data2}
+head(GDP_IMF_Regions_percentages) %>% 
+   select(year,
+         EU_NA_procent,
+         La_procent,
+         Arab_procent,
+         Asia_Pacific_procent,
+         Africa_procent,
+         EU_NA,
+         Asia_and_Pacific,
+         Africa_Region,
+         Middle_East_Region,
+         Latin_America_and_the_Caribbean,
+         World)
+```
+## plotting the newly added columns
+```{r gdp-plotting-percentages}
+ggplot(GDP_IMF_Regions_percentages, aes(x=year)) + 
+  geom_line(aes(y=EU_NA_procent, color="EU & NA")) + 
+  geom_line(aes(y=Asia_Pacific_procent, color="Asia and the Pacific")) +
+  geom_line(aes(y=Africa_procent, color="Africa")) +
+  geom_line(aes(y=Arab_procent, color="Arab states")) +
+  geom_line(aes(y=La_procent, color="Latin america")) +
+  labs(title="Regional GDP percentage of world GDP",
+       y="GDP, current prices (Billions of U.S.dollars)",x="Year",color="Region")+
+  scale_y_continuous(breaks = seq(0,100,10))+
+  theme(axis.text.x = element_text(face="bold", color="#993333", 
+                                   size=8, angle=0),
+        axis.text.y = element_text(face="bold", color="#993333", 
+                                   size=8, angle=0))
+```
+
+## plotting the five comparison graphs
+Now i want to combine the percentages graphs with the GDP and the percentages graphs of unesco heritages sites to see wether or not there is a correlation between GDP and unesco heritage sites.
+
+```{r Europe and North america GDP & heritage sites}
+ggplot() +
+  geom_line(aes(x=GDP_IMF_Regions_percentages$year,
+                y=GDP_IMF_Regions_percentages$EU_NA_procent, 
+                color="GDP Percentage"))+
+   geom_line(aes(x=Heritage_list_graph_data2$year,
+                y=Heritage_list_graph_data2$Eu_percentage_cumulative, 
+                color="Heritage sites Percentage"))+
+  labs(title="Comparison GDP & Heritage sites Region EU & NA",
+       y="Percentage",x="Year",color="Region")+
+  scale_y_continuous(breaks = seq(0,100,10))+
+  theme(axis.text.x = element_text(face="bold", color="#993333", 
+                                   size=8, angle=0),
+        axis.text.y = element_text(face="bold", color="#993333", 
+                                   size=8, angle=0))
+```
+
+```{r Asia and Pacific GDP & heritage sites}
+ggplot() +
+  geom_line(aes(x=GDP_IMF_Regions_percentages$year,
+                y=GDP_IMF_Regions_percentages$Asia_Pacific_procent, 
+                color="GDP Percentage"))+
+   geom_line(aes(x=Heritage_list_graph_data2$year,
+                y=Heritage_list_graph_data2$AsP_percentage_cumulative, 
+                color="Heritage sites Percentage"))+
+  labs(title="Comparison GDP & Heritage sites Region Asia and the Pacific",
+       y="Percentage",x="Year",color="Region")+
+  scale_y_continuous(breaks = seq(0,100,10))+
+  theme(axis.text.x = element_text(face="bold", color="#993333", 
+                                   size=8, angle=0),
+        axis.text.y = element_text(face="bold", color="#993333", 
+                                   size=8, angle=0))
+```
+```{r Arab States GDP & heritage sites}
+ggplot() +
+  geom_line(aes(x=GDP_IMF_Regions_percentages$year,
+                y=GDP_IMF_Regions_percentages$Arab_procent, 
+                color="GDP Percentage"))+
+   geom_line(aes(x=Heritage_list_graph_data2$year,
+                y=Heritage_list_graph_data2$AS_percentage_cumulative, 
+                color="Heritage sites Percentage"))+
+  labs(title="Comparison GDP & Heritage sites Region Arab States",
+       y="Percentage",x="Year",color="Region")+
+  scale_y_continuous(breaks = seq(0,100,10))+
+  theme(axis.text.x = element_text(face="bold", color="#993333", 
+                                   size=8, angle=0),
+        axis.text.y = element_text(face="bold", color="#993333", 
+                                   size=8, angle=0))
+```
+```{r Latin America GDP & heritage sites}
+ggplot() +
+  geom_line(aes(x=GDP_IMF_Regions_percentages$year,
+                y=GDP_IMF_Regions_percentages$La_procent, 
+                color="GDP Percentage"))+
+   geom_line(aes(x=Heritage_list_graph_data2$year,
+                y=Heritage_list_graph_data2$LA_percentage_cumulative, 
+                color="Heritage sites Percentage"))+
+  labs(title="Comparison GDP & Heritage sites Region Latin America",
+       y="Percentage",x="Year",color="Region")+
+  scale_y_continuous(breaks = seq(0,100,10))+
+  theme(axis.text.x = element_text(face="bold", color="#993333", 
+                                   size=8, angle=0),
+        axis.text.y = element_text(face="bold", color="#993333", 
+                                   size=8, angle=0))
+```
+
+```{r Africa GDP & heritage sites}
+ggplot() +
+  geom_line(aes(x=GDP_IMF_Regions_percentages$year,
+                y=GDP_IMF_Regions_percentages$Africa_procent, 
+                color="GDP Percentage"))+
+   geom_line(aes(x=Heritage_list_graph_data2$year,
+                y=Heritage_list_graph_data2$AF_percentage_cumulative, 
+                color="Heritage sites Percentage"))+
+  labs(title="Comparison GDP & Heritage sites Region Africa",
+       y="Percentage",x="Year",color="Region")+
+  scale_y_continuous(breaks = seq(0,100,10))+
+  theme(axis.text.x = element_text(face="bold", color="#993333", 
+                                   size=8, angle=0),
+        axis.text.y = element_text(face="bold", color="#993333", 
+                                   size=8, angle=0))
+```
+
+## mini conclusion
+Looking at the graphs there doesnt seem to be a consistent trend between world heritage sites and GDP. Whilst this isnt a conclusive analysis, it goes to show that the cause for the westerns worlds heavy precense on the list isnt directly linked to GDP

@@ -1,0 +1,72 @@
+---
+title: "Unesco Heritage sites map with time slider"
+output: html_document
+---
+This document is solely made for adding the timeslider which is done in line 
+52. the rest of the creation process is documented in Creation_of_map.R
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library( crosstalk )
+library( leaflet )
+library( dplyr )
+library(xlsx)
+library(readxl)
+```
+
+```{r load in data}
+Heritage_list2 <- read_excel("data/whc-sites-2021.xls")
+```
+
+```{r make shared data object}
+shared_data <- SharedData$new( Heritage_list2 )
+```
+
+```{r color}
+#Get the tacks colored
+getColor <- function(Heritage_list2) {
+  sapply(Heritage_list2$Category_nummerical, function(Category_nummerical) {
+    if(Category_nummerical > 77) {
+      "green"
+    } else if(Category_nummerical <= 68) {
+      "orange"
+    } else if(Category_nummerical < 77){
+      "red"
+    } })
+}
+```
+
+
+```{r icons}
+#design the marker icons
+icons <- awesomeIcons(
+  icon = 'NULL',
+  iconColor = 'black',
+  library = 'fa',
+  markerColor = getColor(Heritage_list2))
+```
+
+
+```{r Map creation}
+#apply the code for a slider
+filter_slider("Heritage_list2$date_inscribed", "Date", shared_data, ~Heritage_list2$date_inscribed, width = "100%")
+leaflet(shared_data, width = "100%", height = 800) %>% 
+  #apply the code from the base map
+  setView(lng = 1, lat = 50, zoom = 1.8) %>% 
+  addTiles() %>% 
+  addProviderTiles(providers$Esri.WorldPhysical,group="Physical") %>%
+  addProviderTiles(providers$Esri,group="Base") %>%
+  #Layer control
+  addLayersControl(
+    baseGroups = c("Physical", "Base"),
+    options = layersControlOptions(collapsed = TRUE)) %>% 
+  #avoid panning out of bounds to map without the pins 
+  setMaxBounds(-180,-90,180,90) %>%
+  #here the colored markers are added
+  addAwesomeMarkers(Heritage_list2$longitude, 
+                    Heritage_list2$latitude, 
+                    icon=icons, 
+                    label=~as.character(name_en),
+                    popup = paste("Category:",Heritage_list2$category,"<br>",
+                   "Country:",Heritage_list2$states_name_en)) 
+```
